@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Classes & Activities</title>
+    <link rel="stylesheet" href="style/styles.css" type="text/css">
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <script src="products.js"></script>
+    <meta content="utf-8" http-equiv="encoding">
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <script src="https://unpkg.com/vue"></script>
+</head>
+
+
+
+<body>
+    <div id="app"> <!-- Vue's element name -->
+        <header>
+            <h1 v-text="sitename"></h1><!-- -->
+            <button class="buttoncheckout" @click='showCheckout' v-if='this.cart.length > 0' ><!-- @click or v-on - the same -->
+          
+                <span class="fas fa-cart-plus"></span> <!-- cart logo -->
+                {{this.cart.length}} Class in Cart
+            </button> 
+        </header>
+        <main>
+        <div v-if='showProduct'> <!-- toggle between showing product -->
+            <div v-for="product in products">
+               
+                <figure>
+                    <img class="image1" v-bind:src="products in products"> <!-- pulls image source -->
+                </figure>
+                <h2 v-text="product.title"></h2>
+                <p v-html="product.description"></p>
+                <p class="inventory">Classes available: {{product.availableInventory}}</p>
+                <p class="price">Price: £{{product.price}}</p>
+                <p class="location">Location: {{product.location}}</p>
+                <button class="buttoncart" v-on:click="addToCart(product)" 
+                v-if='canAddToCart(product)' v-on:click.prevent="decrement(product)"> Add To Cart</button> 
+                
+                <button class="buttoncartfull" disabled='disabled'
+                v-else>Add to cart</button>
+
+                <span v-if='product.availableInventory === cartCount(product.id)'>
+                    All out!
+                </span>
+
+                <span v-else-if='product.availableInventory - cartCount(product.id) < 5'>
+                    Only {{product.availableInventory - cartCount(product.id)}} left
+                </span> 
+
+                <span v-else>Buy now!</span>
+        
+                
+                   
+                    
+                </div>
+            </div>
+                <div v-else>
+                    <h2>Checkout</h2>
+                    <button class="buttonhome" @click='showCheckout'>Back</button><!-- @click or v-on - the same -->
+                    <form id="app" @submit="checkForm" action="/something" method="post">
+  
+                        <p v-if="errors.length">
+                          <b>Please correct the following error(s):</b>
+                          <ul>
+                            <li v-for="error in errors">{{ error }}</li>
+                          </ul>
+                        </p>
+                        
+                        <p>
+                          <label for="order.firstName">First Name: <label>
+                          <input type="text" name="order.firstName" id="order.firstName" v-model="order.firstName">
+                        </p>
+                        <p>
+                            <label for="order.phoneNumber">Phone Number: <label>
+                            <input type="number" name="phoneNumber" id="order.phoneNumber" v-model="order.phoneNumber">
+                            </p>
+                        <input type="submit" value="Checkout" @click="submitForm"> 
+                        </form>
+                              <h2>Order Information</h2>
+                              <p>First Name: {{order.firstName}}</p>
+                              <p>Phone Number: {{order.phoneNumber}}</p>
+                              <p>Lessons you have selected: {{this.cart}}</p>
+                                </div>
+
+                               
+         
+                </div>
+              
+            </div>
+           
+
+      
+       
+        <script src="vue.js"></script> 
+        </main>
+</body>
+</html>
