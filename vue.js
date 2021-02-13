@@ -1,3 +1,5 @@
+const baseUri = 'https://cst3145-cw2-express.herokuapp.com';
+
 const services = {
     getLessons: (cb) => {
         const options = {
@@ -6,7 +8,8 @@ const services = {
             mode: 'cors',
             cache: 'default'
         };
-        fetch("http://localhost:3000/api/lessons", options)
+        
+        fetch(`${baseUri}/api/lessons`, options)
             .then((response) => response.json())
             .then((data) => cb(data));
     },
@@ -20,7 +23,8 @@ const services = {
             },
             body: JSON.stringify(payload)
         };
-        fetch("http://localhost:3000/api/orders", options)
+
+        fetch(`${baseUri}/api/orders`, options)
             .then((data) => cb(data));
     },
 
@@ -34,9 +38,7 @@ const services = {
             body: JSON.stringify(payload)
         };
 
-        console.log(options);
-
-        fetch(`http://localhost:3000/api/lessons/${payload.id}`, options)
+        fetch(`${baseUri}/api/lessons/${payload.id}`, options)
             .then((data) => cb(data));
     },
 
@@ -47,7 +49,8 @@ const services = {
             mode: 'cors',
             cache: 'default',
         };
-        fetch(`http://localhost:3000/api/orders/${payload.id}`, options)
+
+        fetch(`${baseUri}/api/orders/${payload.id}`, options)
             .then((data) => cb(data));
     }
 }
