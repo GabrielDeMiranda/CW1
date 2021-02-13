@@ -1,61 +1,175 @@
-var webstore = new Vue ({
-    el:"#app",
-    data: {
-        showProduct: true,
-        products: products,
-        errors: [],
-        order: {
-            firstName: null,
-            phoneNumber: null,
-        },
-        sitename: "Classes & Activities",
-        cart: []
-    },
-    methods: {
-               decrement(product){
-            if(product.availableInventory > 0){
-                product.availableInventory-- ;
-            }
-        },
-        addToCart(product) {
-            this.cart.push(product.id && product.title);
-    
-        },
-            showCheckout() {
-                this.showProduct = this.showProduct ? false : true;
-        },
-        submitForm() {
-            alert('Order submitted!')
+const services = {
+    getLessons: (cb) => {
+        const options = {
+            method: 'GET',
+            headers: new Headers(),
+            mode: 'cors',
+            cache: 'default'
+        };
+        fetch("http://localhost:3000/api/lessons", options)
+            .then((response) => response.json())
+            .then((data) => cb(data));
     },
 
-        canAddToCart (product) {
+    postOrder: (payload, cb) => {
+        const options = {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        };
+        fetch("http://localhost:3000/api/orders", options)
+            .then((data) => cb(data));
+    },
+
+    putLesson: (payload, cb) => {
+        const options = {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        };
+
+        console.log(options);
+
+        fetch(`http://localhost:3000/api/lessons/${payload.id}`, options)
+            .then((data) => cb(data));
+    },
+
+    removeOrder: (payload, cb) => {
+        const options = {
+            method: 'DELETE',
+            headers: new Headers(),
+            mode: 'cors',
+            cache: 'default',
+        };
+        fetch(`http://localhost:3000/api/orders/${payload.id}`, options)
+            .then((data) => cb(data));
+    }
+}
+
+var webstore = new Vue({
+    el: "#app",
+    data: {
+        showProduct: true,
+        checkouted: false,
+        loading: false,
+        checkouting: false,
+        products: [],
+        errors: [],
+        order: {},
+        sitename: "Classes & Activities",
+        carts: []
+    },
+    mounted() {
+        this.resetOrder();
+        this.loadProducts();
+    },
+    methods: {
+        resetOrder() {
+            this.carts = [];
+            this.order.firstName = null;
+            this.order.phoneNumber = null;
+        },
+
+        loadProducts() {
+            this.loading = true;
+            services.getLessons((data) => {
+                this.products = data;
+                this.loading = false;
+            });
+        },
+
+        addToCart(product) {
+            const existsProduct = this.carts.find(item => item.title === product.title);
+
+            if (!existsProduct) {
+                this.carts.push({ title: product.title, count: 0, id: product.id });
+            }
+
+            this.carts.forEach((item) => {
+                if (item.id === product.id) {
+                    item.count++;
+                    product.availableInventory--;
+                }
+            });
+        },
+
+        showCheckout() {
+            this.showProduct = !this.showProduct;
+
+            if (!!this.showProduct) {
+                this.resetOrder();
+                this.loadProducts();
+            }
+        },
+
+        submitForm(e) {
+            e.preventDefault();
+
+            this.checkForm();
+
+            if (this.errors.length > 0) 
+                return;
+
+            const payload = {
+                customer: {
+                    firstName: this.order.firstName,
+                    phoneNumber: this.order.phoneNumber,
+                },
+                lessons: [
+                    ...this.carts
+                ]
+            };
+
+            this.checkouting = true;
+
+            services.postOrder(payload, () => {
+                this.carts.forEach((cart) => {
+                    const payloadLesson = {
+                        id: cart.id,
+                        total: cart.count
+                    };
+
+                    services.putLesson(payloadLesson, () => {
+                        this.checkouted = true;
+                        this.checkouting = false;
+                    });
+                });
+            });
+        },
+
+        canAddToCart(product) {
             return product.availableInventory > this.cartCount(product.id)
         },
+
         cartCount(id) {
-            let count = 0;
-            for(let i = 0; i < this.cart.length; i++) {
-                if (this.cart[i] === id) count;
-                }
-                return count;
-            },
-            checkForm:function(e) {
-                if(this.order.firstName && this.order.phoneNumber) return;
+            const count = this.carts.filter(item => item.id === id).length;
+            return count;
+        },
+
+        checkForm() {
             this.errors = [];
+
+            if (this.order.firstName && this.order.phoneNumber) 
+                return;
 
             if (!this.order.firstName) {
                 this.errors.push('Please enter your first name.');
             }
             if (!this.order.phoneNumber) {
                 this.errors.push('Please enter your phone number name');
-           
             }
-        
-           
-           
+        },
 
-            e.preventDefault();
-        },         
-
+        removeOrder(order) {
+            services.removeOrder(order, (data) => {
+                console.log(data);
+            });
         }
-    
-    });
+    }
+});
